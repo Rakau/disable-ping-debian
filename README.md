@@ -8,7 +8,6 @@
 
 ```
 bash <(curl -s https://raw.githubusercontent.com/Rakau/disable-ping-debian/main/disable_ping.sh)
-
 ```
 
 或者
