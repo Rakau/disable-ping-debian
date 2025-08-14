@@ -6,20 +6,21 @@ if [ "$EUID" -ne 0 ]; then
   exit 1
 fi
 
-# 设置内核参数，立即生效
+# 立即禁用 ping（ICMP Echo 响应）
 sysctl -w net.ipv4.icmp_echo_ignore_all=1
 
-# 备份sysctl.conf
-cp /etc/sysctl.conf /etc/sysctl.conf.bak.$(date +%F-%T)
+# 配置文件路径
+CONF_FILE="/etc/sysctl.d/99-disable-ping.conf"
 
-# 判断是否已经存在该设置，存在则替换，否则追加
-if grep -q "^net.ipv4.icmp_echo_ignore_all" /etc/sysctl.conf; then
-  sed -i "s/^net.ipv4.icmp_echo_ignore_all=.*/net.ipv4.icmp_echo_ignore_all=1/" /etc/sysctl.conf
-else
-  echo "net.ipv4.icmp_echo_ignore_all=1" >> /etc/sysctl.conf
+# 如果已有旧的 disable-ping 配置文件，先备份
+if [ -f "$CONF_FILE" ]; then
+  cp "$CONF_FILE" "${CONF_FILE}.bak.$(date +%F-%T)"
 fi
 
-# 重新加载sysctl配置（可选，确保文件配置生效）
-sysctl -p
+# 写入永久配置
+echo "net.ipv4.icmp_echo_ignore_all=1" > "$CONF_FILE"
 
-echo "已禁用ICMP Echo回应（ping），重启后依然生效。"
+# 重新加载 sysctl 配置
+sysctl --system
+
+echo "已禁用 ICMP Echo（ping）响应，重启后依然生效。"
